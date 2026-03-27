@@ -1,0 +1,58 @@
+{
+  "position": "RB",
+  "test_rows": 1290,
+  "mae": 4.134,
+  "rmse": 5.611,
+  "start_sit_accuracy": 0.767,
+  "boom_precision": 0.628,
+  "boom_recall": 0.62,
+  "bust_precision": 0.628,
+  "bust_recall": 0.609,
+  "biggest_misses": [
+    {
+      "player": "Jahmyr Gibbs",
+      "team": "DET",
+      "season": 2024,
+      "week": 18,
+      "actual": 46.0,
+      "pred": 18.2,
+      "error": 27.8
+    },
+    {
+      "player": "Breece Hall",
+      "team": "NYJ",
+      "season": 2023,
+      "week": 16,
+      "actual": 43.1,
+      "pred": 17.6,
+      "error": 25.5
+    },
+    {
+      "player": "Austin Ekeler",
+      "team": "LAC",
+      "season": 2022,
+      "week": 17,
+      "actual": 32.1,
+      "pred": 7.6,
+      "error": 24.5
+    },
+    {
+      "player": "James Cook",
+      "team": "BUF",
+      "season": 2023,
+      "week": 15,
+      "actual": 36.1,
+      "pred": 14.7,
+      "error": 21.4
+    },
+    {
+      "player": "Jonathan Taylor",
+      "team": "IND",
+      "season": 2024,
+      "week": 16,
+      "actual": 39.8,
+      "pred": 18.7,
+      "error": 21.1
+    }
+  ]
+}

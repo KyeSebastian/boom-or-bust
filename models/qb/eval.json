@@ -1,0 +1,58 @@
+{
+  "position": "QB",
+  "test_rows": 638,
+  "mae": 3.493,
+  "rmse": 4.579,
+  "start_sit_accuracy": 0.834,
+  "boom_precision": 0.733,
+  "boom_recall": 0.733,
+  "bust_precision": 0.788,
+  "bust_recall": 0.783,
+  "biggest_misses": [
+    {
+      "player": "Tyler Huntley",
+      "team": "BAL",
+      "season": 2021,
+      "week": 15,
+      "actual": 35.9,
+      "pred": 17.9,
+      "error": 18.0
+    },
+    {
+      "player": "Jayden Daniels",
+      "team": "WAS",
+      "season": 2024,
+      "week": 16,
+      "actual": 34.4,
+      "pred": 19.9,
+      "error": 14.6
+    },
+    {
+      "player": "Daniel Jones",
+      "team": "NYG",
+      "season": 2022,
+      "week": 17,
+      "actual": 36.2,
+      "pred": 22.8,
+      "error": 13.4
+    },
+    {
+      "player": "Josh Allen",
+      "team": "BUF",
+      "season": 2024,
+      "week": 15,
+      "actual": 41.3,
+      "pred": 28.0,
+      "error": 13.3
+    },
+    {
+      "player": "Marcus Mariota",
+      "team": "WAS",
+      "season": 2024,
+      "week": 18,
+      "actual": 26.0,
+      "pred": 13.3,
+      "error": 12.8
+    }
+  ]
+}

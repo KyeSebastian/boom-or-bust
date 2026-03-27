@@ -1,0 +1,58 @@
+{
+  "position": "TE",
+  "test_rows": 1005,
+  "mae": 3.733,
+  "rmse": 5.127,
+  "start_sit_accuracy": 0.69,
+  "boom_precision": 0.543,
+  "boom_recall": 0.541,
+  "bust_precision": 0.496,
+  "bust_recall": 0.485,
+  "biggest_misses": [
+    {
+      "player": "Travis Kelce",
+      "team": "KC",
+      "season": 2021,
+      "week": 15,
+      "actual": 41.1,
+      "pred": 14.6,
+      "error": 26.5
+    },
+    {
+      "player": "Mark Andrews",
+      "team": "BAL",
+      "season": 2021,
+      "week": 15,
+      "actual": 35.6,
+      "pred": 10.4,
+      "error": 25.2
+    },
+    {
+      "player": "T.J. Hockenson",
+      "team": "MIN",
+      "season": 2022,
+      "week": 16,
+      "actual": 35.9,
+      "pred": 10.8,
+      "error": 25.1
+    },
+    {
+      "player": "George Kittle",
+      "team": "SF",
+      "season": 2022,
+      "week": 16,
+      "actual": 30.0,
+      "pred": 5.4,
+      "error": 24.6
+    },
+    {
+      "player": "Shane Zylstra",
+      "team": "DET",
+      "season": 2022,
+      "week": 16,
+      "actual": 25.6,
+      "pred": 3.8,
+      "error": 21.8
+    }
+  ]
+}

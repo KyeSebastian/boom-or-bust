@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boom or Bust (Fantasy Football)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+
+    body { -webkit-font-smoothing: antialiased; }
+
+    /* ── Card flip ── */
+    .card-outer {
+      perspective: 1200px;
+      height: 440px;
+      cursor: pointer;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+    .card-inner {
+      position: relative;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-inner.is-flipped {
+      transform: rotateY(180deg);
+    }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 1rem;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+      overflow-y: auto;
+    }
+
+    /* ── Pulse on COMPARE ── */
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.4); }
+      50%       { box-shadow: 0 0 0 8px rgba(249,115,22,0); }
+    }
+    .btn-compare:not(:disabled) {
+      animation: pulse-border 2.4s ease-in-out infinite;
+    }
+
+    /* ── Autocomplete scroll ── */
+    .suggestion-list { max-height: 240px; overflow-y: auto; }
+
+    /* ── Title glow ── */
+    .title-boom {
+      color: #f97316;
+      text-shadow:
+        0 0 18px rgba(249,115,22,0.7),
+        0 0 40px rgba(249,115,22,0.35);
+      animation: glow-boom 3s ease-in-out infinite alternate;
+    }
+    .title-bust {
+      color: #ef4444;
+      text-shadow:
+        0 0 18px rgba(239,68,68,0.65),
+        0 0 40px rgba(239,68,68,0.3);
+      animation: glow-bust 3s ease-in-out infinite alternate;
+    }
+    @keyframes glow-boom {
+      from { text-shadow: 0 0 14px rgba(249,115,22,0.6), 0 0 30px rgba(249,115,22,0.25); }
+      to   { text-shadow: 0 0 24px rgba(249,115,22,0.9), 0 0 55px rgba(249,115,22,0.45); }
+    }
+    @keyframes glow-bust {
+      from { text-shadow: 0 0 14px rgba(239,68,68,0.55), 0 0 30px rgba(239,68,68,0.2); }
+      to   { text-shadow: 0 0 24px rgba(239,68,68,0.85), 0 0 55px rgba(239,68,68,0.4); }
+    }
+
+    /* ── Aurora canvas ── */
+    #aurora-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Film grain overlay ── */
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.055;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 200px 200px;
+    }
+
+    /* ── Player ticker ── */
+    .ticker-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      overflow: hidden;
+      background: rgba(8, 13, 30, 0.7);
+      border-top: 1px solid rgba(249,115,22,0.15);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+    }
+    .ticker-label {
+      flex-shrink: 0;
+      padding: 0 10px 0 12px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f97316;
+      border-right: 1px solid rgba(249,115,22,0.25);
+      white-space: nowrap;
+      line-height: 30px;
+    }
+    .ticker-scroll {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .ticker-track {
+      display: flex;
+      white-space: nowrap;
+      animation: ticker-scroll 10s linear infinite;
+      gap: 0;
+    }
+    .ticker-track:hover { animation-play-state: paused; }
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 24px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #5c6880;
+    }
+    .ticker-item .pos {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 700;
+    }
+    .ticker-item .pos-qb  { background: rgba(249,115,22,0.18); color: #f97316; }
+    .ticker-item .pos-rb  { background: rgba(34,197,94,0.15);  color: #4ade80; }
+    .ticker-item .pos-wr  { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .ticker-item .pos-te  { background: rgba(192,132,252,0.15);color: #c084fc; }
+    .ticker-sep {
+      color: rgba(249,115,22,0.3);
+      font-size: 12px;
+      padding: 0 4px;
+    }
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── Glassmorphism cards ── */
+    .glass-card {
+      background: rgba(12, 20, 48, 0.58);
+      backdrop-filter: blur(18px) saturate(1.6);
+      -webkit-backdrop-filter: blur(18px) saturate(1.6);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    .card-tilt-wrap.boom-glow {
+      box-shadow: 0 8px 28px rgba(249,115,22,0.25);
+    }
+    .card-tilt-wrap.bust-glow {
+      box-shadow: 0 8px 28px rgba(153,27,27,0.2);
+    }
+    .card-tilt-wrap.boom-glow:hover {
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 45px rgba(249,115,22,0.45) !important;
+    }
+    .card-tilt-wrap.bust-glow:hover {
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 45px rgba(153,27,27,0.4) !important;
+    }
+
+    /* ── Card deal-in entry ── */
+    @keyframes deal-left {
+      from { opacity: 0; transform: perspective(900px) translateX(-60px) rotateY(18deg) scale(0.95); }
+      to   { opacity: 1; transform: perspective(900px) translateX(0) rotateY(0deg) scale(1); }
+    }
+    @keyframes deal-right {
+      from { opacity: 0; transform: perspective(900px) translateX(60px) rotateY(-18deg) scale(0.95); }
+      to   { opacity: 1; transform: perspective(900px) translateX(0) rotateY(0deg) scale(1); }
+    }
+    .deal-left  { animation: deal-left  0.65s cubic-bezier(0.4,0,0.2,1) forwards; }
+    .deal-right { animation: deal-right 0.65s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+    /* ── Verdict slide-in ── */
+    @keyframes slide-down {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .verdict-banner { animation: slide-down 0.35s ease-out; }
+
+    /* ── 3D tilt wrapper ── */
+    .card-tilt-wrap {
+      border-radius: 1rem;
+      will-change: transform;
+      transform: perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1);
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+    }
+    .card-tilt-wrap:hover {
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 30px rgba(249,115,22,0.15);
+    }
+
+    /* ── Holographic shimmer overlay ── */
+    .card-shimmer {
+      position: absolute;
+      inset: 0;
+      border-radius: 1rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      background:
+        radial-gradient(
+          ellipse at var(--mx, 50%) var(--my, 50%),
+          rgba(255,255,255,0.22) 0%,
+          rgba(255,180,80,0.08) 30%,
+          transparent 65%
+        ),
+        linear-gradient(
+          135deg,
+          rgba(255,0,120,0.12) 0%,
+          rgba(255,140,0,0.12) 20%,
+          rgba(60,220,120,0.12) 40%,
+          rgba(0,160,255,0.12) 60%,
+          rgba(160,80,255,0.12) 80%,
+          rgba(255,0,120,0.12) 100%
+        );
+      mix-blend-mode: screen;
+      z-index: 10;
+    }
+    .card-tilt-wrap:hover .card-shimmer { opacity: 1; }
+
+    /* ── Battle bar ── */
+    @keyframes bar-grow {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    .battle-fill {
+      transform-origin: left;
+      animation: bar-grow 0.7s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+  </style>
+</head>
+
+<body
+  class="bg-[#1a2035] text-[#f1f5f9] min-h-screen font-sans"
+  x-data="app()"
+  x-init="init()"
+>
+
+  <!-- ═══════════════════════ AURORA CANVAS ══ -->
+  <canvas id="aurora-canvas"></canvas>
+
+  <!-- ═══════════════════════ GRAIN OVERLAY ══ -->
+  <div class="grain"></div>
+
+
+  <!-- ═══════════════════════ PLAYER TICKER ══ -->
+  <div class="ticker-wrap">
+    <div class="ticker-label" id="ticker-label">Loading…</div>
+    <div class="ticker-scroll">
+      <div class="ticker-track" id="ticker-track"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ HEADER ══ -->
+  <header class="relative z-10 px-5 pt-12 pb-2 text-center select-none">
+    <h1 class="flex items-center justify-center gap-3 leading-none">
+      <span class="title-boom text-6xl tracking-tight uppercase" style="font-family:'Anton',sans-serif">Boom</span>
+      <span class="text-[#94a3b8] text-2xl font-light italic">or</span>
+      <span class="title-bust text-6xl tracking-tight uppercase" style="font-family:'Anton',sans-serif">Bust</span>
+    </h1>
+    <p class="mt-3 text-[10px] font-semibold tracking-[0.28em] uppercase text-[#94a3b8]">
+      Fantasy Football &nbsp;·&nbsp; Start / Sit Advisor
+    </p>
+    <p class="text-[#94a3b8] text-xs mt-3" x-cloak>
+      <span x-show="week !== null">
+        <span class="text-[#94a3b8]">Week</span> <span x-text="week" class="text-[#94a3b8] font-semibold"></span>
+        &nbsp;·&nbsp;
+        <span x-text="season" class="text-[#94a3b8] font-semibold"></span>
+      </span>
+      <span x-show="week === null">Loading…</span>
+    </p>
+  </header>
+
+  <!-- ════════════════════════════════ MAIN FORM ══ -->
+  <main class="relative z-10 max-w-2xl mx-auto px-4 pb-24 mt-6">
+
+    <!-- Player inputs side by side -->
+    <div class="grid grid-cols-[1fr_40px_1fr] gap-2 items-start">
+
+      <!-- Player 1 input -->
+      <div class="relative">
+        <input
+          type="text"
+          x-model="p1"
+          @input.debounce.280ms="search(1)"
+          @focus="focus = 1"
+          @keydown.escape="suggestions1 = []"
+          @keydown.enter.prevent="suggestions1.length && selectPlayer(1, suggestions1[0])"
+          placeholder="Search player 1…"
+          autocomplete="off"
+          class="w-full bg-[#243050] border border-[#f97316] rounded-xl px-4 py-3 text-sm
+                 placeholder-[#5c6880] focus:outline-none focus:border-[#fb923c]
+                 transition-colors duration-150"
+        />
+        <!-- Dropdown 1 -->
+        <ul
+          x-show="suggestions1.length && focus === 1"
+          x-cloak
+          @mouseleave="focus = 0; setTimeout(()=>{ suggestions1=[] }, 150)"
+          class="suggestion-list absolute z-20 w-full mt-1 bg-[#243050]
+                 border border-[#3a4a70] rounded-xl shadow-2xl"
+        >
+          <template x-for="s in suggestions1" :key="s.player_display_name">
+            <li
+              @mousedown.prevent="selectPlayer(1, s)"
+              class="flex items-center gap-3 px-4 py-2.5 hover:bg-[#2d3a5e] cursor-pointer transition-colors"
+            >
+              <img
+                :src="s.headshot_url"
+                class="w-9 h-9 rounded-full object-cover object-top bg-[#2d3a5e] shrink-0"
+                @error="$el.style.visibility='hidden'"
+              />
+              <div class="min-w-0">
+                <p class="text-sm font-semibold truncate" x-text="s.player_display_name"></p>
+                <p class="text-xs text-[#94a3b8]" x-text="s.team + ' · ' + s.position"></p>
+              </div>
+            </li>
+          </template>
+        </ul>
+      </div>
+
+      <!-- VS divider -->
+      <div class="flex items-center justify-center" style="padding-top:12px">
+        <span class="text-xs text-[#94a3b8] font-bold tracking-widest">VS</span>
+      </div>
+
+      <!-- Player 2 input -->
+      <div class="relative">
+        <input
+          type="text"
+          x-model="p2"
+          @input.debounce.280ms="search(2)"
+          @focus="focus = 2"
+          @keydown.escape="suggestions2 = []"
+          @keydown.enter.prevent="suggestions2.length && selectPlayer(2, suggestions2[0])"
+          placeholder="Search player 2…"
+          autocomplete="off"
+          class="w-full bg-[#243050] border border-[#f97316] rounded-xl px-4 py-3 text-sm
+                 placeholder-[#5c6880] focus:outline-none focus:border-[#fb923c]
+                 transition-colors duration-150"
+        />
+        <!-- Dropdown 2 -->
+        <ul
+          x-show="suggestions2.length && focus === 2"
+          x-cloak
+          @mouseleave="focus = 0; setTimeout(()=>{ suggestions2=[] }, 150)"
+          class="suggestion-list absolute z-20 w-full mt-1 bg-[#243050]
+                 border border-[#3a4a70] rounded-xl shadow-2xl"
+        >
+          <template x-for="s in suggestions2" :key="s.player_display_name">
+            <li
+              @mousedown.prevent="selectPlayer(2, s)"
+              class="flex items-center gap-3 px-4 py-2.5 hover:bg-[#2d3a5e] cursor-pointer transition-colors"
+            >
+              <img
+                :src="s.headshot_url"
+                class="w-9 h-9 rounded-full object-cover object-top bg-[#2d3a5e] shrink-0"
+                @error="$el.style.visibility='hidden'"
+              />
+              <div class="min-w-0">
+                <p class="text-sm font-semibold truncate" x-text="s.player_display_name"></p>
+                <p class="text-xs text-[#94a3b8]" x-text="s.team + ' · ' + s.position"></p>
+              </div>
+            </li>
+          </template>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Compare button -->
+    <button
+      @click="compare"
+      :disabled="loading || !pos1 || !pos2"
+      class="btn-compare mt-5 w-full py-4 rounded-xl font-black text-sm tracking-[0.15em]
+             uppercase transition-all duration-150 select-none"
+      :class="(loading || !p1.trim() || !p2.trim())
+        ? 'bg-[#243050] text-[#5c6880] cursor-not-allowed'
+        : 'bg-[#f97316] hover:bg-[#ea6c0a] active:scale-[0.98] text-white'"
+
+    >
+      <span x-show="!loading">Compare</span>
+      <span x-show="loading" x-cloak class="inline-flex items-center gap-2">
+        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        Analyzing…
+      </span>
+    </button>
+
+    <!-- Error message -->
+    <p
+      x-show="error"
+      x-cloak
+      x-text="error"
+      class="mt-3 text-center text-sm text-[#f87171] px-2"
+    ></p>
+
+    <!-- ── Verdict banner ── -->
+    <div
+      x-show="results"
+      x-cloak
+      class="verdict-banner mt-6 py-4 px-5 rounded-2xl border text-center
+             bg-[#431407] border-[#f97316]"
+    >
+      <p class="text-xs text-[#fb923c] uppercase tracking-widest font-bold mb-1">Recommendation</p>
+      <p class="text-[#f97316] font-black text-xl tracking-tight" x-text="results?.verdict"></p>
+    </div>
+
+    <!-- ── Battle bar ── -->
+    <div x-show="results" x-cloak class="mt-5 px-1">
+      <div class="flex items-center gap-3">
+        <!-- P1 last name -->
+        <span class="text-[11px] font-bold text-[#f1f5f9] w-16 text-right truncate"
+              x-text="results?.players[0]?.player_name.split(' ').slice(-1)[0]"></span>
+        <!-- Bar -->
+        <div class="flex-1 flex rounded-full overflow-hidden h-2.5 bg-[#111420]">
+          <div
+            class="battle-fill h-full rounded-l-full"
+            :class="results?.players[0]?.recommendation === 'BOOM' ? 'bg-[#f97316]' : 'bg-[#991b1b]'"
+            :style="`width:${battlePct(0)}%`"
+          ></div>
+          <div
+            class="battle-fill h-full rounded-r-full flex-1"
+            :class="results?.players[1]?.recommendation === 'BOOM' ? 'bg-[#f97316]' : 'bg-[#991b1b]'"
+            style="transform-origin:right"
+          ></div>
+        </div>
+        <!-- P2 last name -->
+        <span class="text-[11px] font-bold text-[#f1f5f9] w-16 truncate"
+              x-text="results?.players[1]?.player_name.split(' ').slice(-1)[0]"></span>
+      </div>
+      <div class="flex justify-between mt-1 px-[76px] text-[10px] text-[#6b7280]">
+        <span x-text="parseFloat(results?.players[0]?.predicted_pts).toFixed(2) + ' pts'"></span>
+        <span x-text="parseFloat(results?.players[1]?.predicted_pts).toFixed(2) + ' pts'"></span>
+      </div>
+    </div>
+
+    <!-- ── Player cards ── -->
+    <div
+      x-show="results"
+      x-cloak
+      class="mt-4 grid grid-cols-2 gap-3"
+    >
+      <template x-for="(player, i) in (results?.players ?? [])" :key="player.player_name">
+        <!-- 3D tilt wrapper -->
+        <div class="card-tilt-wrap"
+             :class="[player.recommendation === 'BOOM' ? 'boom-glow' : 'bust-glow', i === 0 ? 'deal-left' : 'deal-right']"
+             @mousemove="tiltCard($event, $el)"
+             @mouseleave="resetCard($el)">
+        <div class="card-outer" @click="player.flipped = !player.flipped">
+          <div class="card-inner" :class="{ 'is-flipped': player.flipped }">
+
+            <!-- ★ FRONT ★ -->
+            <div class="card-face glass-card flex flex-col">
+              <div class="card-shimmer"></div>
+
+              <!-- Photo area -->
+              <div class="relative bg-[#080d1e]/80 flex-shrink-0" style="height:180px">
+                <img
+                  :src="player.headshot_url"
+                  class="w-full h-full object-contain object-bottom"
+                  @error="$el.style.opacity='0'"
+                />
+
+                <!-- BOOM / BUST badge -->
+                <span
+                  class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[11px] font-black tracking-wider"
+                  :class="player.recommendation === 'BOOM'
+                    ? 'bg-[#f97316] text-white'
+                    : 'bg-[#991b1b] text-white'"
+                  x-text="player.recommendation"
+                ></span>
+
+                <!-- Rank chip -->
+                <span class="absolute bottom-2 right-2.5 text-[10px] text-[#94a3b8] font-mono">
+                  #<span x-text="player.rank"></span>&nbsp;<span x-text="player.position"></span>
+                </span>
+              </div>
+
+              <!-- Info area -->
+              <div class="flex flex-col flex-1 p-3 text-center justify-between">
+                <div>
+                  <p class="font-bold text-[18px] leading-snug" x-text="player.player_name + ' - ' + teamLabel(player.team)"></p>
+                  <p class="text-[11px] text-[#94a3b8] mt-1 tracking-wide">
+                    vs <span class="text-white font-semibold" x-text="teamLabel(player.opponent_team)"></span>
+                  </p>
+                </div>
+                <div>
+                  <p class="text-[10px] text-[#94a3b8] uppercase tracking-[0.2em] font-semibold mb-1">Projected</p>
+                  <p class="text-[#f1f5f9] font-black text-4xl leading-none">
+                    <span x-text="parseFloat(player.predicted_pts).toFixed(2)"></span>
+                  </p>
+                  <p class="text-xs text-[#6b7280] mt-1">pts</p>
+                  <p class="text-[10px] text-white mt-3 select-none">Detailed Analysis ↩</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ★ BACK ★ -->
+            <div class="card-face card-back glass-card p-4 flex flex-col justify-between">
+              <div class="card-shimmer"></div>
+              <div>
+                <!-- Mini header -->
+                <div class="flex items-center gap-2 mb-3 flex-wrap">
+                  <span
+                    class="px-2 py-0.5 rounded text-[11px] font-black tracking-wider"
+                    :class="player.recommendation === 'BOOM'
+                      ? 'bg-[#f97316] text-white'
+                      : 'bg-[#991b1b] text-white'"
+                    x-text="player.recommendation"
+                  ></span>
+                </div>
+                <p
+                  class="text-[16px] leading-relaxed text-[#cbd5e1]"
+                  x-text="player.reasoning"
+                ></p>
+              </div>
+              <p class="text-[10px] text-[#3d4460] mt-3 select-none">← tap to flip back</p>
+            </div>
+
+          </div>
+        </div>
+        </div><!-- end card-tilt-wrap -->
+      </template>
+    </div>
+
+    <!-- Footer hint -->
+    <p
+      x-show="results"
+      x-cloak
+      class="text-center text-[11px] text-[#5c6880] mt-5 select-none"
+    >
+      Tap a card to read the reasoning
+    </p>
+
+  </main>
+
+  <!-- ══════════════════════════════════ SCRIPT ══ -->
+  <script>
+    // ── Aurora mesh background ─────────────────────────────────────────
+    (function initAurora() {
+      const canvas = document.getElementById('aurora-canvas');
+      const ctx    = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const blobs = [
+        { x: 0.15, y: 0.25, vx:  0.00028, vy:  0.00018, r: 0.60, color: [249, 115,  22] },
+        { x: 0.80, y: 0.70, vx: -0.00020, vy: -0.00025, r: 0.55, color: [ 29,  78, 216] },
+        { x: 0.50, y: 0.50, vx:  0.00012, vy: -0.00022, r: 0.48, color: [124,  58, 237] },
+        { x: 0.10, y: 0.80, vx:  0.00018, vy: -0.00014, r: 0.42, color: [ 16, 185, 129] },
+        { x: 0.90, y: 0.15, vx: -0.00014, vy:  0.00026, r: 0.45, color: [239,  68,  68] },
+        { x: 0.60, y: 0.90, vx: -0.00022, vy: -0.00010, r: 0.38, color: [ 56, 189, 248] },
+      ];
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.filter = 'blur(75px)';
+
+        blobs.forEach(b => {
+          b.x += b.vx;
+          b.y += b.vy;
+          if (b.x < -0.1 || b.x > 1.1) b.vx *= -1;
+          if (b.y < -0.1 || b.y > 1.1) b.vy *= -1;
+
+          const cx = b.x * canvas.width;
+          const cy = b.y * canvas.height;
+          const radius = b.r * Math.max(canvas.width, canvas.height);
+          const [r, g, bl] = b.color;
+
+          const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          grad.addColorStop(0,   `rgba(${r},${g},${bl},0.38)`);
+          grad.addColorStop(0.5, `rgba(${r},${g},${bl},0.12)`);
+          grad.addColorStop(1,   `rgba(${r},${g},${bl},0)`);
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+
+    // ── Scanline columns ──────────────────────────────────────────────
+    (function initScanlines() {
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;';
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+
+      const COL_W  = 72;
+      const ROW_H  = 20;
+      const CHARS  = [
+        'QB','RB','WR','TE','TD','YDS','REC','CAR',
+        'START','SIT','FLEX','PPR',
+        '42','17','28','11','7','3','99','84',
+        '318','187','421','98','53','145','24',
+        '6.4','74%','11.2','28.1','53.4',
+      ];
+      let cols, rows, grid, timers;
+
+      function randChar() { return CHARS[Math.floor(Math.random() * CHARS.length)]; }
+      function randAlpha() { return (Math.random() * 0.28 + 0.06).toFixed(2); }
+
+      function init() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        cols  = Math.floor(canvas.width  / COL_W);
+        rows  = Math.floor(canvas.height / ROW_H);
+
+        // grid[col][row] = { char, alpha }
+        grid = Array.from({ length: cols }, () =>
+          Array.from({ length: rows }, () => ({ char: randChar(), alpha: randAlpha() }))
+        );
+
+        // Each column flickers on its own random interval
+        if (timers) timers.forEach(clearInterval);
+        timers = grid.map((col, c) =>
+          setInterval(() => {
+            const r = Math.floor(Math.random() * rows);
+            col[r].char  = randChar();
+            col[r].alpha = randAlpha();
+            // Occasionally flash a whole column bright
+            if (Math.random() > 0.995) {
+              col.forEach(cell => { cell.alpha = (Math.random() * 0.5 + 0.3).toFixed(2); });
+              setTimeout(() => col.forEach(cell => { cell.alpha = randAlpha(); }), 120);
+            }
+          }, Math.random() * 120 + 60)
+        );
+      }
+      init();
+      window.addEventListener('resize', init);
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = `bold 11px monospace`;
+
+        grid.forEach((col, c) => {
+          col.forEach((cell, r) => {
+            ctx.fillStyle = `rgba(249,115,22,${cell.alpha})`;
+            ctx.fillText(cell.char, c * COL_W + 8, r * ROW_H + 14);
+          });
+        });
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+
+    // ── Player ticker (live top scorers from prev week) ────────────────
+    async function initTicker(season, week) {
+      const posClass = { QB: 'pos-qb', RB: 'pos-rb', WR: 'pos-wr', TE: 'pos-te' };
+
+      function buildItem(p) {
+        const pos  = p.position || p.pos;
+        const name = p.player_display_name || p.name;
+        const pts  = p.fantasy_points_ppr != null
+          ? `<span style="color:#f97316;font-size:9px">${parseFloat(p.fantasy_points_ppr).toFixed(1)} pts</span>`
+          : '';
+        return `<span class="ticker-item">
+          <span class="pos ${posClass[pos]}">${pos}</span>
+          ${name} <span style="color:#3d4460;font-size:9px">${p.team}</span>${pts}
+        </span><span class="ticker-sep">◆</span>`;
+      }
+
+      try {
+        const res  = await fetch(`/top-scorers?season=${season}&week=${week}`);
+        const data = await res.json();
+
+        if (data.players && data.players.length) {
+          document.getElementById('ticker-label').textContent = `WK ${data.week} · TOP SCORERS`;
+          const html = [...data.players, ...data.players].map(buildItem).join('');
+          document.getElementById('ticker-track').innerHTML = html;
+        } else {
+          document.getElementById('ticker-label').textContent = 'TOP SCORERS';
+        }
+      } catch {
+        document.getElementById('ticker-label').textContent = 'TOP SCORERS';
+      }
+    }
+
+    // nflverse uses 'LA' for Rams — map to standard display abbreviations
+    const TEAM_DISPLAY = { LA: 'LAR', LV: 'LV' };
+    function teamLabel(abbr) { return TEAM_DISPLAY[abbr] ?? abbr; }
+
+    function app() {
+      return {
+        // Inputs
+        p1: '', p2: '',
+        pos1: null, pos2: null,   // set automatically when player is selected
+
+        // Week context
+        season: null,
+        week: null,
+
+        // UI state
+        loading: false,
+        error: '',
+        focus: 0,
+
+        // Autocomplete
+        suggestions1: [],
+        suggestions2: [],
+
+        // Results
+        results: null,
+
+        // ── 3D tilt ───────────────────────────────────────────────────────
+        tiltCard(e, el) {
+          const r  = el.getBoundingClientRect();
+          const cx = (e.clientX - r.left) / r.width;   // 0–1
+          const cy = (e.clientY - r.top)  / r.height;  // 0–1
+          const rx = (cy - 0.5) * -22;
+          const ry = (cx - 0.5) *  22;
+          el.style.transition = 'transform 0.08s ease, box-shadow 0.08s ease';
+          el.style.transform  = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.04,1.04,1.04)`;
+          el.style.setProperty('--mx', (cx * 100) + '%');
+          el.style.setProperty('--my', (cy * 100) + '%');
+        },
+        resetCard(el) {
+          el.style.transition = 'transform 0.5s ease, box-shadow 0.5s ease';
+          el.style.transform  = 'perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
+        },
+
+        // ── Battle bar ────────────────────────────────────────────────────
+        battlePct(idx) {
+          if (!this.results) return 50;
+          const pts = this.results.players.map(p => p.predicted_pts);
+          const total = pts[0] + pts[1];
+          return total === 0 ? 50 : (pts[idx] / total * 100).toFixed(1);
+        },
+
+        // ── Init ──────────────────────────────────────────────────────────
+        async init() {
+          try {
+            // TODO: restore /latest-week for 2026 season live data
+            // const res  = await fetch('/latest-week');
+            // const data = await res.json();
+            // this.season = data.season;
+            // this.week   = data.week;
+            this.season = 2024;
+            this.week   = 14;
+          } catch {
+            // Fallback — let the user see the UI even if this fails
+            this.season = 2024;
+            this.week   = 18;
+          }
+          initTicker(this.season, this.week);
+        },
+
+        // ── Autocomplete ─────────────────────────────────────────────────
+        async search(playerNum) {
+          const query = playerNum === 1 ? this.p1 : this.p2;
+
+          // Clear stored position when user edits the field
+          if (playerNum === 1) this.pos1 = null;
+          else                 this.pos2 = null;
+
+          if (query.trim().length < 2) {
+            if (playerNum === 1) this.suggestions1 = [];
+            else                 this.suggestions2 = [];
+            return;
+          }
+
+          // Re-assert focus so the dropdown shows even after a prior selection
+          this.focus = playerNum;
+
+          try {
+            const url = `/players/search?q=${encodeURIComponent(query)}&season=${this.season ?? 2024}`;
+            const res  = await fetch(url);
+            const data = await res.json();
+            if (playerNum === 1) this.suggestions1 = data;
+            else                 this.suggestions2 = data;
+          } catch {
+            // Silently ignore autocomplete failures
+          }
+        },
+
+        selectPlayer(playerNum, suggestion) {
+          if (playerNum === 1) {
+            this.p1           = suggestion.player_display_name;
+            this.pos1         = suggestion.position;
+            this.suggestions1 = [];
+          } else {
+            this.p2           = suggestion.player_display_name;
+            this.pos2         = suggestion.position;
+            this.suggestions2 = [];
+          }
+          this.focus = 0;
+        },
+
+        // ── Compare ──────────────────────────────────────────────────────
+        async compare() {
+          if (!this.p1.trim() || !this.p2.trim() || this.loading) return;
+
+          this.loading = true;
+          this.error   = '';
+          this.results = null;
+
+          try {
+            const res = await fetch('/compare', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                player1_name:     this.p1.trim(),
+                player1_position: this.pos1,
+                player2_name:     this.p2.trim(),
+                player2_position: this.pos2,
+                season: this.season,
+                week:   this.week,
+              }),
+            });
+
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              this.error = err.detail ?? 'Something went wrong. Check the player names and try again.';
+              return;
+            }
+
+            const data = await res.json();
+            // Add flip state to each player object
+            data.players = data.players.map(p => ({ ...p, flipped: false }));
+            this.results = data;
+
+          } catch {
+            this.error = 'Could not reach the server. Make sure it is running.';
+          } finally {
+            this.loading = false;
+          }
+        },
+      };
+    }
+  </script>
+
+</body>
+</html>

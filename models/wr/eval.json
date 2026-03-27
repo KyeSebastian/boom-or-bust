@@ -1,0 +1,58 @@
+{
+  "position": "WR",
+  "test_rows": 2023,
+  "mae": 4.756,
+  "rmse": 6.508,
+  "start_sit_accuracy": 0.717,
+  "boom_precision": 0.558,
+  "boom_recall": 0.551,
+  "bust_precision": 0.577,
+  "bust_recall": 0.566,
+  "biggest_misses": [
+    {
+      "player": "Ja'Marr Chase",
+      "team": "CIN",
+      "season": 2021,
+      "week": 17,
+      "actual": 55.6,
+      "pred": 15.0,
+      "error": 40.6
+    },
+    {
+      "player": "Amari Cooper",
+      "team": "CLE",
+      "season": 2023,
+      "week": 16,
+      "actual": 51.5,
+      "pred": 11.2,
+      "error": 40.3
+    },
+    {
+      "player": "Mike Evans",
+      "team": "TB",
+      "season": 2022,
+      "week": 17,
+      "actual": 48.7,
+      "pred": 13.4,
+      "error": 35.3
+    },
+    {
+      "player": "Tee Higgins",
+      "team": "CIN",
+      "season": 2021,
+      "week": 16,
+      "actual": 43.4,
+      "pred": 16.0,
+      "error": 27.4
+    },
+    {
+      "player": "Danny Amendola",
+      "team": "HOU",
+      "season": 2021,
+      "week": 18,
+      "actual": 32.3,
+      "pred": 5.1,
+      "error": 27.2
+    }
+  ]
+}
