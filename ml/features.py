@@ -1,5 +1,5 @@
 """
-Pure feature engineering functions -- no I/O, no side effects.
+Pure feature engineering functions, no I/O, no side effects.
 All functions take DataFrames and return DataFrames.
 """
 
@@ -105,11 +105,11 @@ def add_vegas_features(weekly: pd.DataFrame, schedules: pd.DataFrame) -> pd.Data
 def compute_def_rank_allowed(weekly: pd.DataFrame) -> pd.DataFrame:
     """
     For each (season, week, position), rank defenses by cumulative PPR points
-    allowed to that position -- excluding the current week (no leakage).
+    allowed to that position. Excludes the current week to avoid data leakage.
 
-    Returns DataFrame with columns:
+    Returns a DataFrame with columns:
         season, week, def_team, position, cum_pts_allowed, def_rank
-    where def_rank 1 = easiest matchup (most points allowed).
+    def_rank 1 means the easiest matchup (most points allowed to that position).
     """
     df = weekly[["season", "week", "opponent_team", "position", "fantasy_points_ppr"]].copy()
     df = df.dropna(subset=["opponent_team", "fantasy_points_ppr"])

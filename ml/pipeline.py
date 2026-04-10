@@ -1,5 +1,5 @@
 """
-ml/pipeline.py -- Data pipeline orchestrator for Fantasy Football Start-or-Sit AI.
+ml/pipeline.py: Data pipeline for the fantasy football start/sit tool.
 
 Usage:
     python -m ml.pipeline                        # default: 2021-2024, no force refresh
@@ -85,13 +85,13 @@ def fetch_snap_counts(year: int) -> pd.DataFrame:
 
 def fetch_rz_stats(year: int) -> pd.DataFrame:
     """
-    Derives red zone stats (inside opponents' 20-yard line) from play-by-play.
+    Pulls red zone stats (inside the opponents' 20-yard line) from play-by-play data.
 
-    Per player per week:
-        rz_targets      -- pass targets received in the red zone
-        rz_carries      -- rush attempts in the red zone
-        rz_target_share -- player rz_targets / team total rz_targets
-        rz_carry_share  -- player rz_carries / team total rz_carries
+    Computes per player per week:
+        rz_targets: pass targets received in the red zone
+        rz_carries: rush attempts in the red zone
+        rz_target_share: player rz_targets divided by team total rz_targets
+        rz_carry_share: player rz_carries divided by team total rz_carries
 
     Merge key for downstream use: (season, week, player_id)
     """
@@ -156,8 +156,7 @@ def run_pipeline(
     force_refresh: bool = False,
 ) -> dict[str, pd.DataFrame]:
     """
-    Top-level entry point. Returns dict mapping position -> feature DataFrame.
-    Callable directly by FastAPI (Step 5).
+    Top-level entry point. Returns a dict mapping each position to its feature DataFrame.
     """
     if years is None:
         years = SEASON_YEARS

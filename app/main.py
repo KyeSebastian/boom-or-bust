@@ -1,12 +1,12 @@
 """
-app/main.py — Step 5b: FastAPI application for Fantasy Football Start-or-Sit AI.
+app/main.py: FastAPI application for the fantasy football start/sit tool.
 
 Endpoints:
-    GET  /                  — serves the frontend
-    GET  /health            — liveness check
-    GET  /latest-week       — returns the most recent season/week in the data
-    GET  /players/search    — autocomplete player search
-    POST /compare           — head-to-head start/sit comparison with reasoning
+    GET  /               serves the frontend
+    GET  /health         liveness check
+    GET  /latest-week    returns the most recent season/week in the data
+    GET  /players/search autocomplete player search
+    POST /compare        head-to-head start/sit comparison with reasoning
 """
 
 from contextlib import asynccontextmanager
@@ -29,7 +29,7 @@ PROC_DIR   = Path("data/processed")
 STATIC_DIR = Path("app/static")
 
 # ---------------------------------------------------------------------------
-# App lifespan — load models once at startup
+# App lifespan: load models once at startup so they are ready for every request
 # ---------------------------------------------------------------------------
 
 _predictor: Predictor | None = None
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Start or Sit AI", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Start or Sit", version="1.0.0", lifespan=lifespan)
 
 # Serve static files under /static/*
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -104,7 +104,7 @@ async def latest_week():
 @app.get("/top-scorers")
 async def top_scorers(
     season: int = Query(2024),
-    week: int   = Query(..., description="Current week — returns leaders from week-1"),
+    week: int   = Query(..., description="Current week, returns leaders from the previous week"),
     top_n: int  = Query(5, description="Top N per position"),
 ):
     """Return the top fantasy scorers (PPR) from the previous week, grouped by position."""
@@ -132,7 +132,7 @@ async def top_scorers(
 @app.get("/players/search")
 async def players_search(
     q: str = Query(..., min_length=2, description="Partial player name"),
-    position: str | None = Query(None, description="QB / RB / WR / TE (optional — omit to search all)"),
+    position: str | None = Query(None, description="QB / RB / WR / TE (optional, omit to search all positions)"),
     season: int = Query(2024, description="NFL season year"),
 ):
     positions = ["QB", "RB", "WR", "TE"]
@@ -189,7 +189,7 @@ async def compare(req: CompareRequest):
 
     Both players are predicted independently using their own position models.
     The player with the higher predicted score is the START recommendation.
-    Each player's card includes 3–4 sentences of plain-English reasoning.
+    Each player's card includes 3-4 sentences of plain-English reasoning.
     """
     players_input = [
         (req.player1_name, req.player1_position),

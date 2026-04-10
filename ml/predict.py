@@ -1,5 +1,5 @@
 """
-ml/predict.py — Step 4: Prediction inference layer for Fantasy Football Start-or-Sit AI.
+ml/predict.py: Inference layer for the fantasy football start/sit tool.
 
 Provides a Predictor class that:
     - Loads trained XGBoost models (lazy-loaded and cached per position)
@@ -7,10 +7,10 @@ Provides a Predictor class that:
     - Returns predicted PPR fantasy points with start/sit recommendations
 
 Recommendation logic:
-    START  — predicted score at or above the positional median for that week
-    SIT    — predicted score below the positional median for that week
-    BOOM   — predicted score in the top 25% for that week
-    BUST   — predicted score in the bottom 25% for that week
+    START: predicted score at or above the positional median for that week
+    SIT:   predicted score below the positional median for that week
+    BOOM:  predicted score in the top 25% for that week
+    BUST:  predicted score in the bottom 25% for that week
 
 Output per player:
     {
@@ -21,8 +21,8 @@ Output per player:
         "week":        int,
         "predicted_pts": float,
         "rank":        int,          # 1 = highest predicted
-        "recommendation": "START" | "SIT",
-        "flag":        "BOOM" | "BUST" | null
+        "recommendation": "START" or "SIT",
+        "flag":        "BOOM" or "BUST" or null
     }
 
 Usage:
@@ -141,7 +141,7 @@ class Predictor:
         model, features = self._load(pos)
         full_df = self._load_week(pos, season, week)
 
-        # Run predictions on the full pool first — rank and thresholds must
+        # Run predictions on the full pool first. Rank and thresholds must
         # reflect the entire positional pool, not just the filtered subset.
         X_full     = full_df.reindex(columns=features, fill_value=0.0)
         preds_full = model.predict(X_full)

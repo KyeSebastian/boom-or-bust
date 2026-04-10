@@ -1,23 +1,23 @@
-# Boom or Bust — Fantasy Football Start/Sit Advisor
+# Boom or Bust - Fantasy Football Start/Sit Advisor
 
-A machine learning tool that tells you who to start and who to sit in fantasy football. Enter two players, pick a week, and get a head-to-head verdict backed by real numbers — matchup quality, recent form, Vegas lines, snap rate, and red zone usage.
+A machine learning tool that tells you who to start and who to sit in fantasy football. Enter two players, pick a week, and get a head-to-head verdict backed by real numbers: matchup quality, recent form, Vegas lines, snap rate, and red zone usage.
 
 ---
 
 ## How It Works
 
-The core of this project is four XGBoost models — one per position (QB, RB, WR, TE) — trained on four seasons of NFL data (2021–2024). Each model takes in a set of engineered features for a given player-week and outputs a predicted PPR fantasy score.
+The core of this project is four XGBoost models, one per position (QB, RB, WR, TE), trained on four seasons of NFL data (2021-2024). Each model takes in a set of engineered features for a given player-week and outputs a predicted PPR fantasy score.
 
 **Features fed into each model:**
 - Rolling 3 and 4-game averages for position-relevant stats (passing yards, rushing yards, receiving yards, targets, carries)
-- Trend signal (3-game average minus 4-game average — catches players heating up or cooling down)
+- Trend signal (3-game average minus 4-game average, catches players heating up or cooling down)
 - Defensive rank against each position and cumulative points allowed
 - Vegas implied team total and spread line
 - Snap rate and red zone target/carry share (3-game rolling)
 
 **Start/Sit logic:**
 - Each week, every player in the dataset gets a predicted score
-- The positional median for that week is the threshold — above it is START, below is SIT
+- The positional median for that week is the threshold. Above it is START, below is SIT.
 - BOOM flag = top 25% of that position for the week
 - BUST flag = bottom 25%
 
@@ -26,14 +26,14 @@ The core of this project is four XGBoost models — one per position (QB, RB, WR
 - The higher predicted score wins — recommendation overrides to START/SIT based on the matchup
 
 **Plain-English reasoning:**
-- After prediction, a rules-based engine converts the raw feature values into 3–4 readable sentences covering matchup, form, Vegas context, and usage
-- This is not AI-generated text — it is deterministic logic built around the same features the model uses
+- After prediction, a rules-based engine converts the raw feature values into 3-4 readable sentences covering matchup, form, Vegas context, and usage
+- This is not auto-generated text. It is deterministic logic built around the same features the model uses.
 
 ---
 
 ## Model Accuracy
 
-Measured on a held-out test set (Weeks 15–18, 2024 season) using start/sit accuracy — the percentage of times the model correctly identified whether a player should start or sit relative to the positional median.
+Measured on a held-out test set (Weeks 15-18, 2024 season) using start/sit accuracy — the percentage of times the model correctly identified whether a player should start or sit relative to the positional median.
 
 | Position | Start/Sit Accuracy |
 |----------|--------------------|
@@ -91,7 +91,7 @@ ml/
   pipeline.py     # data ingestion and feature engineering
   train.py        # model training (one XGBoost model per position)
   evaluate.py     # accuracy evaluation on held-out test weeks
-  predict.py      # inference layer — takes player + week, returns ranked predictions
+  predict.py      # inference layer, takes player + week, returns ranked predictions
   reasoning.py    # rules-based plain-English explanation generator
 
 app/

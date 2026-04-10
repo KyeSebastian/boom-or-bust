@@ -1,18 +1,16 @@
 """
-ml/evaluate.py -- Step 3: Model evaluation for Fantasy Football Start-or-Sit AI.
-
-Evaluates each position model on the held-out test set (weeks 15-18).
+ml/evaluate.py: Evaluates each position model on the held-out test set (weeks 15-18).
 
 Metrics computed:
-    mae                -- mean absolute error (pts)
-    rmse               -- root mean squared error (pts)
-    start_sit_accuracy -- % of head-to-head pairs where model picked the higher scorer
-    boom_precision     -- of players model flagged as boom, how many actually scored top 25%
-    bust_precision     -- of players model flagged as bust, how many actually scored bottom 25%
-    boom_recall        -- of actual boom weeks, how many did the model catch
-    bust_recall        -- of actual bust weeks, how many did the model catch
+    mae: mean absolute error in points
+    rmse: root mean squared error in points
+    start_sit_accuracy: percentage of head-to-head pairs where the model picked the higher scorer
+    boom_precision: of players the model flagged as boom, how many actually scored in the top 25%
+    bust_precision: of players the model flagged as bust, how many actually scored in the bottom 25%
+    boom_recall: of actual boom weeks, how many did the model catch
+    bust_recall: of actual bust weeks, how many did the model catch
 
-Results saved to models/{pos}/eval.json (consumed by Step 5 API for confidence scores).
+Results are saved to models/{pos}/eval.json.
 
 Usage:
     python -m ml.evaluate
@@ -220,7 +218,7 @@ def evaluate_position(position: str) -> dict:
 
     out_path = MODELS_DIR / position.lower() / "eval.json"
     out_path.write_text(json.dumps(result, indent=2))
-    print(f"  Saved -> {out_path}")
+    print(f"  Saved: {out_path}")
 
     return result
 

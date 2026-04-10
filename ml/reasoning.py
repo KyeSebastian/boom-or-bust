@@ -1,14 +1,14 @@
 """
-ml/reasoning.py — Step 5a: Plain-English reasoning generator.
+ml/reasoning.py: Generates plain-English explanations for start/sit predictions.
 
-Converts raw feature values into 3–4 readable sentences a fantasy manager
-can absorb in seconds. No stats jargon — just the key factors.
+Converts raw feature values into 3-4 readable sentences a fantasy manager
+can absorb quickly. No stats jargon, just the key factors.
 
 Sentence structure (position-aware):
-    1. Matchup quality       — defensive rank + points allowed
-    2. Recent form           — rolling averages + trend direction
-    3. Vegas game context    — implied team total + game script
-    4. Usage / red zone      — snap rate or red zone looks (conditional)
+    1. Matchup quality: defensive rank and points allowed
+    2. Recent form: rolling averages and trend direction
+    3. Vegas game context: implied team total and game script
+    4. Usage or red zone: snap rate or red zone looks (only shown when relevant)
 """
 
 from __future__ import annotations
@@ -169,7 +169,7 @@ def _sentence_usage(player_name: str, position: str, row: dict) -> str | None:
         rz_label = "red zone targets"
 
     # Priority: low snap rate is the strongest warning, red zone is the best upside signal.
-    # Only surface ONE factor — the most impactful one.
+    # Only surface one factor, the most impactful one.
     if not math.isnan(snap_pct) and snap_pct < 0.55:
         return (
             f"One thing to watch: {player_name} has been on the field for only "
@@ -204,7 +204,7 @@ def generate_reasoning(
     recommendation: str,
 ) -> str:
     """
-    Generate 3–4 plain-English sentences explaining a start/sit prediction.
+    Generates 3-4 plain-English sentences explaining a start/sit prediction.
 
     Parameters
     ----------
@@ -212,12 +212,12 @@ def generate_reasoning(
     team         : Team abbreviation (e.g. "GB")
     position     : QB / RB / WR / TE
     feature_row  : Dict of feature values for this player-week
-    predicted_pts: Model's predicted PPR fantasy points
+    predicted_pts: Predicted PPR fantasy points
     recommendation: "START" or "SIT"
 
     Returns
     -------
-    str — 3 or 4 sentences joined by spaces.
+    str: 3 or 4 sentences joined by spaces.
     """
     sentences = [
         _sentence_matchup(player_name, position, feature_row),

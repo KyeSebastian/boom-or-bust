@@ -1,14 +1,13 @@
 """
-ml/train.py — Step 2: Model training for Fantasy Football Start-or-Sit AI.
+ml/train.py: Trains one XGBoost regression model per position (QB, RB, WR, TE).
 
-Trains one XGBoost regression model per position (QB, RB, WR, TE).
 Uses a time-based train/test split to prevent data leakage:
-    Train: weeks 2–14
-    Test:  weeks 15–18
+    Train: weeks 2-14
+    Test:  weeks 15-18
 
 Outputs per position (saved to models/{pos}/):
-    model.ubj       — trained XGBoost model
-    features.json   — ordered list of feature columns the model expects
+    model.ubj: trained XGBoost model
+    features.json: ordered list of feature columns the model expects
 
 Usage:
     python -m ml.train
@@ -33,10 +32,10 @@ MODELS_DIR = Path("models")
 POSITIONS = ["QB", "RB", "WR", "TE"]
 
 TARGET = "fantasy_points_ppr"
-TRAIN_WEEKS = range(2, 15)   # weeks 2–14
-TEST_WEEKS  = range(15, 19)  # weeks 15–18
+TRAIN_WEEKS = range(2, 15)   # weeks 2-14
+TEST_WEEKS  = range(15, 19)  # weeks 15-18
 
-# Columns to drop before training — identifiers, raw stats, and leaky targets
+# Columns to drop before training: identifiers, raw stats, and leaky targets
 DROP_COLS = [
     "player_id", "player_name", "player_display_name",
     "position", "position_group", "headshot_url",
@@ -54,7 +53,7 @@ DROP_COLS = [
     "receiving_yards_after_catch", "receiving_first_downs", "receiving_epa",
     "receiving_2pt_conversions", "racr", "target_share", "air_yards_share",
     "wopr", "special_teams_tds",
-    # other target (non-PPR) -- keep only fantasy_points_ppr
+    # other target (non-PPR), keep only fantasy_points_ppr
     "fantasy_points",
     # raw red zone counts -- model uses rolling + trend versions instead
     "rz_targets", "rz_carries", "rz_target_share", "rz_carry_share",
@@ -132,8 +131,8 @@ def train_position(position: str) -> dict:
     features_path = out_dir / "features.json"
     features_path.write_text(json.dumps(X_train.columns.tolist(), indent=2))
 
-    print(f"  Saved -> {model_path}")
-    print(f"  Saved -> {features_path}")
+    print(f"  Saved: {model_path}")
+    print(f"  Saved: {features_path}")
 
     return {
         "position": position,
