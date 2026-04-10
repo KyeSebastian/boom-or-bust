@@ -23,7 +23,7 @@ The core of this project is four XGBoost models, one per position (QB, RB, WR, T
 
 **Head-to-head compare:**
 - Both players are run through their respective position models independently
-- The higher predicted score wins — recommendation overrides to START/SIT based on the matchup
+- The higher predicted score wins. Recommendation overrides to START/SIT based on the matchup.
 
 **Plain-English reasoning:**
 - After prediction, a rules-based engine converts the raw feature values into 3-4 readable sentences covering matchup, form, Vegas context, and usage
@@ -33,7 +33,7 @@ The core of this project is four XGBoost models, one per position (QB, RB, WR, T
 
 ## Model Accuracy
 
-Measured on a held-out test set (Weeks 15-18, 2024 season) using start/sit accuracy — the percentage of times the model correctly identified whether a player should start or sit relative to the positional median.
+Measured on a held-out test set (Weeks 15-18, 2024 season) using start/sit accuracy: the percentage of times the model correctly identified whether a player should start or sit relative to the positional median.
 
 | Position | Start/Sit Accuracy |
 |----------|--------------------|
@@ -42,14 +42,14 @@ Measured on a held-out test set (Weeks 15-18, 2024 season) using start/sit accur
 | WR       | 71.7%              |
 | TE       | 69.0%              |
 
-TE accuracy reflects how top-heavy the position is — a handful of elite tight ends dominate, making the rest genuinely hard to separate.
+TE accuracy reflects how top-heavy the position is. A handful of elite tight ends dominate, making the rest genuinely hard to separate.
 
 ---
 
 ## Data Sources
 
 All data pulled via `nfl_data_py`:
-- Weekly player stats (4 seasons: 2021–2024)
+- Weekly player stats (4 seasons: 2021-2024)
 - NFL schedules and opponent data
 - Snap counts and participation rates
 - Play-by-play data for red zone stats
@@ -58,11 +58,11 @@ All data pulled via `nfl_data_py`:
 
 ## Tech Stack
 
-- **Python** — data pipeline, feature engineering, model training, inference
-- **XGBoost** — gradient boosting models for each position
-- **FastAPI** — REST API backend
-- **Pandas / NumPy** — data processing
-- **Vanilla JS / HTML / CSS** — frontend UI (no framework)
+- **Python**: data pipeline, feature engineering, model training, inference
+- **XGBoost**: gradient boosting models for each position
+- **FastAPI**: REST API backend
+- **Pandas / NumPy**: data processing
+- **Vanilla JS / HTML / CSS**: frontend UI (no framework)
 
 ---
 
